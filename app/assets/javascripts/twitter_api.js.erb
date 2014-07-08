@@ -1,0 +1,67 @@
+$(document).ready(function() {
+	var map = ""
+  	var faye = new Faye.Client('http://localhost:9292/faye');
+  	var infoWindow = new google.maps.InfoWindow({
+  		maxWidth: 200,
+  		disableAutoPan: true
+  	});
+  	faye.subscribe("/faye/tweets", function(data) {
+  		console.log(data.text.geo.coordinates[0]);
+		var marker = new_marker(data)
+		var contentString = data.text.text
+		infoWindow.setContent(marker.content)
+		infoWindow.open(map, marker);
+		google.maps.event.addListener(marker, 'click', function() {
+			if (!this.open) {
+				this.open = true;
+				this.newInfo = new google.maps.InfoWindow({
+	  				maxWidth: 200,
+	  				disableAutoPan: true
+	  			});
+				this.newInfo.setContent(this.content)
+				this.newInfo.open(map, this);
+			} else {
+				this.newInfo.close(map, this)
+				this.open = false;
+			}
+		});
+  	});
+
+  	function initialize() {
+  		var mapOptions = {
+  			center: new google.maps.LatLng(37.7833, -122.4167),
+  			zoom: 6
+  		};
+  		map = new google.maps.Map(document.getElementById("map_canvas"),
+  			mapOptions);
+  	}
+
+  	function new_marker(data) {
+  		var marker_icon = ""
+  		switch (data.language) {
+  			case "ENGLISH":
+  				marker_icon = '/assets/english_marker.png'
+  				break;
+  			case "SPANISH":
+  				marker_icon = '/assets/spanish_marker.png'
+  				break;
+  			case "PORTUGUSE":
+    			marker_icon = '/assets/portuguese_marker.png'
+  				break;
+  			default:
+  				marker_icon = '/assets/marker.png'
+  		}
+  		return new google.maps.Marker({
+			position: new google.maps.LatLng(data.text.geo.coordinates[0], data.text.geo.coordinates[1]),
+			map: map,
+			animation: google.maps.Animation.DROP,
+			title: data.language,
+			content: "<b>" + data.language + "</b><p>" + 
+			data.text.text + "</p>",
+			icon: marker_icon
+		});
+  	}
+
+    initialize();
+});
+

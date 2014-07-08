@@ -1,0 +1,11 @@
+<%= stylesheet_link_tag 'twitter_api' %>
+  <%= javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDGCihAwawm_tMs2GOoyqVV_JQXkj4ctYQ' %>
+
+<h1>TwitterApi#connect</h1>
+<p>Find me in app/views/twitter_api/connect.html.erb</p>
+<div id="content" name="content">
+	<%= render partial: 'twitter_api/map', locals: { numTweets: @tweet} %>
+</div>
+<div id="map_canvas">
+
+</div>

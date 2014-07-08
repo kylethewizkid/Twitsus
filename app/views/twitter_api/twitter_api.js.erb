@@ -1,0 +1,19 @@
+function updateTweets()
+{	
+    $(function() {
+		$.ajax({
+		    url: "/get_tweets",
+		    dataType: 'JSON',
+		    success: function(data) {
+		    	$('#content').html("<%= j render :partial => 'map' %>")
+		    },
+		    error: function(XMLHttpRequest, textStatus, errorThrown) { 
+        		console.log("Status: " + textStatus); console.log("Error: " + errorThrown); 
+    		} 
+		});
+	});
+
+    setTimeout(updateTweets, 5000);
+}
+
+updateTweets()
