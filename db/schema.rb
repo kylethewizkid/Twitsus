@@ -11,15 +11,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140629210855) do
+ActiveRecord::Schema.define(version: 0) do
 
-  create_table "keys", force: true do |t|
-    t.string   "consumer_key"
-    t.string   "consumer_secret"
-    t.string   "oauth_token_secret"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string   "oauth_token"
-  end
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
 
 end
