@@ -21,7 +21,7 @@ class TwitterApiController < ApplicationController
 					puts "#{status.text}"
 					language = tweet_language(status.text)
 					if is_valid_language(language)
-						client.publish('/faye/tweets', 'text' => status, 'language' => language[:name])
+						client.publish('/faye/tweets', 'text' => status, 'language' => language[:name], "ext" => "tweetme")
 					end
 				end
 
