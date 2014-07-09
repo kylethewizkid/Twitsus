@@ -9,7 +9,7 @@ class TwitterApiController < ApplicationController
 
 	def index
 		EM::run {
-			client = Faye::Client.new('http://localhost:9292/faye')
+			client = Faye::Client.new('http://fayebulous.herokuapp.com/faye')
 			configure_tweet_stream()
 			left_long = -122.75
 			left_lat = 36.8
