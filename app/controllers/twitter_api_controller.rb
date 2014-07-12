@@ -4,7 +4,7 @@ class TwitterApiController < ApplicationController
 
 	KEYS = { 	consumer_key: 		'CONSUMER_KEY',
 				consumer_secret: 	'CONSUMER_SECRET',
-				oauth_token: 		'40685570-JHvUbJPn4rB789eKKZYjPl8qRNSk8qXDnr8ytpWpc',
+				oauth_token: 		'OAUTH_TOKEN',
 				oauth_token_secret: 'rvpcG21ZD2oyI4wQe4Ca4CAO0a0rF4lWJwsThDSkaqfio' }
 
 	def index
