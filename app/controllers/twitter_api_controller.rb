@@ -5,7 +5,7 @@ class TwitterApiController < ApplicationController
 	KEYS = { 	consumer_key: 		'CONSUMER_KEY',
 				consumer_secret: 	'CONSUMER_SECRET',
 				oauth_token: 		'OAUTH_TOKEN',
-				oauth_token_secret: 'rvpcG21ZD2oyI4wQe4Ca4CAO0a0rF4lWJwsThDSkaqfio' }
+				oauth_token_secret: 'OAUTH_TOKEN_SECRET' }
 
 	def index
 		EM::run {
