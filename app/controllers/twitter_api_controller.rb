@@ -2,7 +2,7 @@ require 'tweetstream'
 class TwitterApiController < ApplicationController
 
 
-	KEYS = { 	consumer_key: 		'7lYgOweNHtppP6OkU2s3DXe4A',
+	KEYS = { 	consumer_key: 		'CONSUMER_KEY',
 				consumer_secret: 	'qm1Kt1WoDxqPP8MCfPgqY1geOEulmPaOB6GN9GbxgQWS6WbLQ6',
 				oauth_token: 		'40685570-JHvUbJPn4rB789eKKZYjPl8qRNSk8qXDnr8ytpWpc',
 				oauth_token_secret: 'rvpcG21ZD2oyI4wQe4Ca4CAO0a0rF4lWJwsThDSkaqfio' }
