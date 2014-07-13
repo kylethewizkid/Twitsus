@@ -2,32 +2,42 @@ require 'tweetstream'
 class TwitterApiController < ApplicationController
 
 
-	KEYS = { 	consumer_key: 		CONSUMER_KEY,
-				consumer_secret: 	CONSUMER_SECRET,
-				oauth_token: 		OAUTH_TOKEN,
-				oauth_token_secret: OAUTH_TOKEN_SECRET }
+	KEYS = { 	consumer_key: 		Rails.application.secrets.CONSUMER_KEY,
+				consumer_secret: 	Rails.application.secrets.CONSUMER_SECRET,
+				oauth_token: 		Rails.application.secrets.OAUTH_TOKEN,
+				oauth_token_secret: Rails.application.secrets.OAUTH_TOKEN_SECRET }
 
 	def index
+		configure_tweet_stream()
+		@@currentSession = rand(36**9).to_s(36)
+		@@tweet_client = TweetStream::Client.new
+		@@faye_client = Faye::Client.new('http://fayebulous.herokuapp.com/faye')
 		EM::run {
-			client = Faye::Client.new('http://fayebulous.herokuapp.com/faye')
-			configure_tweet_stream()
 			left_long = -122.75
 			left_lat = 36.8
 			right_long = -121.75
 			right_lat = 37.8
 			locations = format_locations(left_long, left_lat, right_long, right_lat)
-			TweetStream::Client.new.filter({locations: locations}) do |status|  
+			@@tweet_client.filter({locations: locations}) do |status|  
 				if ( is_tweet_inside_geo(left_long, left_lat, right_long, right_lat, status))
 					puts "#{status.text}"
 					language = tweet_language(status.text)
 					if is_valid_language(language)
-						client.publish('/faye/tweets', 'text' => status, 'language' => language[:name])
+						@@faye_client.publish('/faye/tweets', 'text' => status, 'language' => language[:name])
 					end
 				end
 
 			end
 
 		}
+	end
+
+	def kill_em()
+		puts @@tweet_client
+		puts @@faye_client
+		@@tweet_client.stop_stream
+		@@faye_client.disconnect
+		render :nothing => true
 	end
 
 
