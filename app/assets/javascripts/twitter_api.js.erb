@@ -33,7 +33,6 @@ $(document).ready(function() {
   }
 
   function new_marker(tweet) {
-    console.log(tweet)
     lat = tweet.geo.coordinates[0]
     lng = tweet.geo.coordinates[1]
     language = tweet.language
@@ -54,7 +53,7 @@ $(document).ready(function() {
   }
 
   function determine_flag(language) {
-      switch (tweet.language) {
+      switch (language) {
       // case "ENGLISH":
       //   return '/assets/english_marker.png'
       // case "SPANISH":
