@@ -1,74 +1,90 @@
 $(document).ready(function() {
-  window.onbeforeunload = function() {
-    console.log("BOOM")
-    $.ajax({
-      async: false,
-      url: "/twitter_api/kill_em",
-      type: "post"
+
+  window.onbeforeunload = function() { kill_clients() };
+
+  var map = ""
+  var faye = new Faye.Client('http://fayebulous.herokuapp.com/faye');
+  var infoWindow = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
+
+  faye.subscribe("/faye/" + currentSession, function(response) {
+
+    var tweet = response.text
+    tweet.language = response.language
+    var marker = new_marker(tweet)
+    update_info_window(marker)
+    
+    google.maps.event.addListener(marker, 'click', function () { 
+      marker = marker_clicked(this) 
     });
+  });
+
+  function initialize() {
+    var mapOptions = {  center:     new google.maps.LatLng(37.7833, -122.4167),
+                        zoom:       9,
+                        mapTypeId:  google.maps.MapTypeId.HYBRID };
+
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
   }
-	var map = ""
-  	var faye = new Faye.Client('http://fayebulous.herokuapp.com/faye');
-  	var infoWindow = new google.maps.InfoWindow({
-  		maxWidth: 200,
-  		disableAutoPan: true
-  	});
-  	faye.subscribe("/faye/tweets", function(data) {
-  		var marker = new_marker(data)
-  		var contentString = data.text.text
-  		infoWindow.setContent(marker.content)
-  		infoWindow.open(map, marker);
-  		google.maps.event.addListener(marker, 'click', function() {
-  			if (!this.open) {
-  				this.open = true;
-  				this.newInfo = new google.maps.InfoWindow({
-  	  				maxWidth: 200,
-  	  				disableAutoPan: true
-  	  			});
-  				this.newInfo.setContent(this.content)
-  				this.newInfo.open(map, this);
-  			} else {
-  				this.newInfo.close(map, this)
-  				this.open = false;
-  			}
-  		});
-  	});
 
-  	function initialize() {
-  		var mapOptions = {
-  			center: new google.maps.LatLng(37.7833, -122.4167),
-  			zoom: 6
-  		};
-  		map = new google.maps.Map(document.getElementById("map_canvas"),
-  			mapOptions);
-  	}
+  function update_info_window(marker) {
+    infoWindow.currMarker = marker
+    infoWindow.setContent(marker.content)
+    infoWindow.open(map, marker);
+  }
 
-  	function new_marker(data) {
-  		var marker_icon = ""
-  		switch (data.language) {
-  			case "ENGLISH":
-  				marker_icon = '/assets/english_marker.png'
-  				break;
-  			case "SPANISH":
-  				marker_icon = '/assets/spanish_marker.png'
-  				break;
-  			case "PORTUGUSE":
-    			marker_icon = '/assets/portuguese_marker.png'
-  				break;
-  			default:
-  				marker_icon = '/assets/marker.png'
-  		}
-  		return new google.maps.Marker({
-			position: new google.maps.LatLng(data.text.geo.coordinates[0], data.text.geo.coordinates[1]),
-			map: map,
-			animation: google.maps.Animation.DROP,
-			title: data.language,
-			content: "<b>" + data.language + "</b><p>" + 
-			data.text.text + "</p>",
-			icon: marker_icon
-		});
-  	}
+  function new_marker(tweet) {
+    console.log(tweet)
+    lat = tweet.geo.coordinates[0]
+    lng = tweet.geo.coordinates[1]
+    language = tweet.language
+    bubble_content = "<b>" + language + "</b><p>" + tweet.text + "</p>"
 
-    initialize();
+    var marker_icon = determine_flag(language)
+    var new_position = new google.maps.LatLng(lat, lng)
+    var new_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true })
+    new_window.setContent = tweet.text
+
+    return new google.maps.Marker({ position:   new_position,
+                                    map:        map,
+                                    animation:  google.maps.Animation.DROP,
+                                    title:      language,
+                                    content:    bubble_content,
+                                    icon:       marker_icon,
+                                    statusWindow: new_window });
+  }
+
+  function determine_flag(language) {
+      switch (tweet.language) {
+      // case "ENGLISH":
+      //   return '/assets/english_marker.png'
+      // case "SPANISH":
+      //   return '/assets/spanish_marker.png'
+      // case "PORTUGUSE":
+      //   return '/assets/portuguese_marker.png'
+      default:
+        return'/assets/marker.png'
+    }
+  }
+
+  function marker_clicked(marker) {
+    if (infoWindow.currMarker === marker) {
+      infoWindow.currMarker = ""
+      infoWindow.close(map, marker)
+      marker.is_open = false;
+    } else if (!marker.is_open) {
+      marker.statusWindow.open(map, marker);
+      marker.is_open = true;
+    } else {
+      marker.statusWindow.close(map, marker)
+      marker.is_open = false;
+    }
+  }
+
+  function kill_clients() {
+    $.ajax({  async:  false,
+              url:    "/twitter_api/kill_clients",
+              type:   "post" });
+  }
+
+  initialize();
 });
-
