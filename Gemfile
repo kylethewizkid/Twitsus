@@ -53,6 +53,3 @@ gem 'binding_of_caller'
 
 # Language detection (with confidence)
 gem 'cld'
-
-# Keep secrets in gitignore & maintain heroku secrets.
-gem 'heroku_secrets', github: 'alexpeattie/heroku_secrets'
