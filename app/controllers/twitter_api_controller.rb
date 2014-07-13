@@ -2,10 +2,10 @@ require 'tweetstream'
 class TwitterApiController < ApplicationController
 
 
-	KEYS = { 	consumer_key: 		Rails.application.secrets.CONSUMER_KEY,
-				consumer_secret: 	Rails.application.secrets.CONSUMER_SECRET,
-				oauth_token: 		Rails.application.secrets.OAUTH_TOKEN,
-				oauth_token_secret: Rails.application.secrets.OAUTH_TOKEN_SECRET }
+	KEYS = { 	consumer_key: 		ENV["CONSUMER_KEY"],
+				consumer_secret: 	ENV["CONSUMER_SECRET"],
+				oauth_token: 		ENV["OAUTH_TOKEN"],
+				oauth_token_secret: ENV["OAUTH_TOKEN_SECRET"] }
 
 	def index
 		configure_tweet_stream()

@@ -53,3 +53,6 @@ gem 'binding_of_caller'
 
 # Language detection (with confidence)
 gem 'cld'
+
+# To configure heroku env variables safely
+gem "figaro"
