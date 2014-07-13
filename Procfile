@@ -1,1 +1,1 @@
-web: bundle exec thin start -p $PORT -C /config/pub_secrets.yml
+web: bundle exec thin start -p $PORT -C config/pub_secrets.yml
