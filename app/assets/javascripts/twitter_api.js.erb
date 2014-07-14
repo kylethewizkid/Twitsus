@@ -7,10 +7,11 @@ $(document).ready(function() {
   var infoWindow = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
 
   faye.subscribe("/faye/" + currentSession, function(response) {
-
     var tweet = response.text
     tweet.language = response.language
     var marker = new_marker(tweet)
+    var contentString = tweet.text
+
     update_info_window(marker)
     
     google.maps.event.addListener(marker, 'click', function () { 
@@ -26,30 +27,31 @@ $(document).ready(function() {
     map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
   }
 
-  function update_info_window(marker) {
-    infoWindow.currMarker = marker
-    infoWindow.setContent(marker.content)
-    infoWindow.open(map, marker);
-  }
-
   function new_marker(tweet) {
+    console.log(tweet)
     lat = tweet.geo.coordinates[0]
     lng = tweet.geo.coordinates[1]
     language = tweet.language
     bubble_content = "<b>" + language + "</b><p>" + tweet.text + "</p>"
 
     var marker_icon = determine_flag(language)
-    var new_position = new google.maps.LatLng(lat, lng)
-    var new_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true })
-    new_window.setContent = tweet.text
+    new_position = new google.maps.LatLng(lat, lng)
+    new_status_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
+    new_status_window.setContent(tweet.text)
 
-    return new google.maps.Marker({ position:   new_position,
-                                    map:        map,
-                                    animation:  google.maps.Animation.DROP,
-                                    title:      language,
-                                    content:    bubble_content,
-                                    icon:       marker_icon,
-                                    statusWindow: new_window });
+    return new google.maps.Marker({ position:     new_position,
+                                    map:          map,
+                                    animation:    google.maps.Animation.DROP,
+                                    title:        language,
+                                    content:      bubble_content,
+                                    icon:         marker_icon,
+                                    statusWindow: new_status_window});
+  }
+
+  function update_info_window(marker) {
+    infoWindow.currMarker = marker
+    infoWindow.setContent(marker.content)
+    infoWindow.open(map, marker);
   }
 
   function determine_flag(language) {
@@ -61,7 +63,7 @@ $(document).ready(function() {
       // case "PORTUGUSE":
       //   return '/assets/portuguese_marker.png'
       default:
-        return'/assets/marker.png'
+        return'/assets/english_marker.png'
     }
   }
 
