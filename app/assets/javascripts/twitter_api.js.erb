@@ -37,7 +37,7 @@ $(document).ready(function() {
     var marker_icon = determine_flag(language)
     new_position = new google.maps.LatLng(lat, lng)
     new_status_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
-    new_status_window.setContent(tweet.text)
+    new_status_window.setContent(bubble_content)
 
     return new google.maps.Marker({ position:     new_position,
                                     map:          map,

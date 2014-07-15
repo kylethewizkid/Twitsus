@@ -7,13 +7,15 @@ class TwitterApiController < ApplicationController
     @@tweet_client  = TweetStream::Client.new
     @@faye_client   = Faye::Client.new('http://fayebulous.herokuapp.com/faye')
     @currentSession = rand(36**9).to_s(36)
+    bounds = {}
+    bounds[:left_long], bounds[:left_lat], bounds[:right_long], bounds[:right_lat] = create_bounds()
+    @center = calculate_center(bounds)
 
-    left_long, left_lat, right_long, right_lat = generate_bounds()
-    locations = format_locations(left_long, left_lat, right_long, right_lat)
+    locations = format_locations(bounds)
 
     @@tweet_client.filter({locations: locations}) do |status|
 
-      is_tweet_in_bounds  = tweet_in_bounds?(left_long, left_lat, right_long, right_lat, status)
+      is_tweet_in_bounds  = tweet_in_bounds?(bounds, status)
       lang_of_tweet       = tweet_language(status.text)
       is_valid_language   = valid_language?(lang_of_tweet)
 
@@ -37,28 +39,34 @@ class TwitterApiController < ApplicationController
     return language[:reliable] && language[:code] != "un" && language[:code] != 'xxx'
   end
 
-  def tweet_in_bounds?(left_long, left_lat, right_long, right_lat, status)
-    return (left_long   <= status.geo.lng.to_f && 
-            left_lat    <= status.geo.lat.to_f &&
-            right_long  >= status.geo.lng.to_f && 
-            right_lat   >= status.geo.lat.to_f)
+  def tweet_in_bounds?(bounds, status)
+    return (bounds[:left_long]   <= status.geo.lng.to_f && 
+            bounds[:left_lat]    <= status.geo.lat.to_f &&
+            bounds[:right_long]  >= status.geo.lng.to_f && 
+            bounds[:right_lat]   >= status.geo.lat.to_f)
   end
 
-  def format_locations(left_long, left_lat, right_long, right_lat)
-    return "#{left_long},#{left_lat},#{right_long},#{right_lat}"
+  def format_locations(bounds)
+    return "#{bounds[:left_long]},#{bounds[:left_lat]},#{bounds[:right_long]},#{bounds[:right_lat]}"
   end
 
   def tweet_language(status)
     CLD.detect_language(status)
   end
 
-  def generate_bounds()
+  def create_bounds()
     # Default to San Francisco bounds
     left_long = -122.75
     left_lat = 36.8
     right_long = -121.75
     right_lat = 37.8
     return [left_long, left_lat, right_long, right_lat]
+  end
+
+  def calculate_center(bounds)
+    lat_center = (bounds[:left_lat]+bounds[:right_lat])/2
+    long_center = (bounds[:right_long]+bounds[:right_lat])/2
+    return {lat_center: lat_center, long_center: long_center}
   end
 
   def configure_tweet_stream()
