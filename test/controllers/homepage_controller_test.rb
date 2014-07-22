@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class TwitterApiControllerTest < ActionController::TestCase
+class HomepageControllerTest < ActionController::TestCase
   # test "the truth" do
   #   assert true
   # end

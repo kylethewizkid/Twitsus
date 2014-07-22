@@ -1,8 +1,7 @@
-<%= stylesheet_link_tag 'twitter_api' %>
+<%= stylesheet_link_tag 'homepage' %>
   <%= javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDGCihAwawm_tMs2GOoyqVV_JQXkj4ctYQ' %>
-<div id="map_canvas"></div>
+<input type="text" id="search_address" class="search_address" value=""/>
+<div id="map_canvas" class="map_canvas"></div>
 <script>
   var currentSession = "<%= @currentSession %>"
-  var center_lat = <%= @center[:lat_center] %>
-  var center_long = <%= @center[:long_center] %>
 </script>

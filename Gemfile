@@ -28,6 +28,7 @@ gem 'tweetstream'
 
 # Server that allows threading
 gem 'thin'
+gem 'unicorn'
 
 # Allow controller & view to continuously communicate.
 gem 'faye'
@@ -41,3 +42,5 @@ gem 'cld'
 
 # To configure heroku env variables safely
 gem "figaro"
+
+gem "rspec-rails"

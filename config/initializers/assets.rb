@@ -1,2 +1,2 @@
-Rails.application.config.assets.precompile += %w( twitter_api.js )
-Rails.application.config.assets.precompile += %w( twitter_api.css )
+Rails.application.config.assets.precompile += %w( homepage.js )
+Rails.application.config.assets.precompile += %w( homepage.css )
