@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
   window.onbeforeunload = function() { kill_clients() };
-
+  var is_past_refactory_period = true
   var map = ""
   var faye = new Faye.Client('http://fayebulous.herokuapp.com/faye');
   var infoWindow = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
@@ -123,12 +123,16 @@ $(document).ready(function() {
   function change_bounds() {
     var is_valid_zoom   = valid_zoom()
     var bounds          = get_bounds();
-    $.post("/homepage/change_bounds", {sw_lng:          bounds["sw_lng"], 
-                                      sw_lat:           bounds["sw_lat"], 
-                                      ne_lng:           bounds["ne_lng"], 
-                                      ne_lat:           bounds["ne_lat"],
-                                      currentSession:   currentSession,
-                                      is_valid_zoom:    is_valid_zoom});
+    if (is_past_refactory_period) {
+      $.post("/homepage/change_bounds", {sw_lng:          bounds["sw_lng"], 
+                                        sw_lat:           bounds["sw_lat"], 
+                                        ne_lng:           bounds["ne_lng"], 
+                                        ne_lat:           bounds["ne_lat"],
+                                        currentSession:   currentSession,
+                                        is_valid_zoom:    is_valid_zoom});
+      is_past_refactory_period = false
+      setTimeout(function() { is_past_refactory_period = true; }, 1000);
+    }
   }
 
   function get_bounds() {
