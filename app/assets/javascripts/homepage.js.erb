@@ -2,38 +2,80 @@ $(document).ready(function() {
 
   window.onbeforeunload = function() { kill_clients() };
   var is_past_refactory_period = true
-  var map = ""
-  var faye = new Faye.Client('http://fayebulous.herokuapp.com/faye');
-  var infoWindow = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
-  var addressField = document.getElementById('search_address');
-  var geocoder = new google.maps.Geocoder();
-  faye.subscribe("/faye/" + currentSession, function(response) {
-    var tweet = response.text
-    tweet.language = response.language.name
-    var marker = new_marker(tweet)
-    var contentString = tweet.text
+  var map           = ""
+  var faye          = new Faye.Client('http://fayebulous.herokuapp.com/faye');
+  var infoWindow    = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
+  var addressField  = document.getElementById('search_address');
+  var geocoder      = new google.maps.Geocoder();
+  var heat_map_data = {}
+  var heatmaps      = {}
+  var all_markers   = {}
 
-    update_info_window(marker)
-    
-    google.maps.event.addListener(marker, 'click', function () { marker = marker_clicked(this) });
-  });
-
-  document.getElementById("search_address").addEventListener("keydown", function(e) {
-      if (submit_button_pressed(e)) { search(); }
-    }, false);
-
-  function initialize() {
-    var mapOptions = { zoom: 9, mapTypeId:  google.maps.MapTypeId.HYBRID };
-
-    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-
+  function initialize_map() {
+    var mapOptions  = { zoom: 9, mapTypeId:  google.maps.MapTypeId.HYBRID };
+    map             = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
     google.maps.event.addListener(map,"idle",function() { change_bounds() });
     set_center();
+    initialize_search_bar()
+  }
 
+  function initialize_search_bar() {
+    document.getElementById("search_address").addEventListener("keydown", function(e) {
+      if (submit_button_pressed(e)) { search(); }
+    }, false);
+  }
+
+  function initialize_pubsub() {
+    faye.subscribe("/faye/" + currentSession, function(response) {
+      console.log(response)
+      var tweet         = response.tweet
+      tweet.language    = tweet.language.name
+      var marker        = new_marker(tweet)
+      update_info_window(marker)
+      google.maps.event.addListener(marker, 'click', function () { marker = marker_clicked(this) });
+      update_heat_and_markers(tweet.language, tweet.lat, tweet.lng, marker)
+    });
+  }
+
+  function update_heat_and_markers(lang, lat, lng, marker) {
+    if (!heat_map_data[lang]) {
+      set_new_language(lang)
+    }
+    all_markers[lang].push(marker)
+    new_data_point = new google.maps.LatLng(lat, lng)
+    heat_map_data[lang].push(new_data_point)
+  }
+
+  function toggle_all_markers(make_visible, except_language) {
+    for (var lang in all_markers) {
+      if (lang != except_language) {
+        for (i = 0; i < all_markers[lang].length; i++) {
+          all_markers[lang][i].setVisible(make_visible);
+        }
+      } else {
+        all_markers[lang][i].setVisible(!make_visible);
+      }
+    }
+  }
+
+  function set_new_language(lang) {
+    heat_map_data[lang] = new google.maps.MVCArray([])
+    heatmaps[lang]      = new google.maps.visualization.HeatmapLayer({data: heat_map_data[lang]});
+    all_markers[lang]   = []
+  }
+
+  function toggle_heat_map(make_visible, except_language) {
+    for (var lang in heatmaps) {
+      if (lang != except_language) {
+        set_map_to = make_visible ? map : null 
+      } else {
+        set_map_to = make_visible ? null : map
+      }
+      heatmaps[lang].setMap(set_map_to)
+    }
   }
 
   function set_center() {
-    // Try W3C Geolocation (Preferred)
     if(geolocation_supported) {
       browserSupportFlag = true;
       navigator.geolocation.getCurrentPosition(function(position) {
@@ -41,9 +83,7 @@ $(document).ready(function() {
                                                   position.coords.longitude);
         map.setCenter(initialLocation);
       }, function() { handleNoGeolocation(browserSupportFlag) });
-    }
-    // Browser doesn't support Geolocation
-    else {
+    } else {
       browserSupportFlag = false;
       handleNoGeolocation(browserSupportFlag);
     }
@@ -63,15 +103,12 @@ $(document).ready(function() {
   }
 
   function new_marker(tweet) {
-    console.log(tweet)
-    var tweet_coords      = {lat: tweet.lat, lng:  tweet.lng}
     var language          = tweet.language
     var bubble_content    = "<b>" + language + "</b><p>" + tweet.text + "</p>"
     var marker_icon       = determine_flag(language)
-    var new_position      = new google.maps.LatLng(tweet_coords["lat"], tweet_coords["lng"])
+    var new_position      = new google.maps.LatLng(tweet.lat, tweet.lng)
     var new_status_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
     new_status_window.setContent(bubble_content)
-
     return new google.maps.Marker({ position:     new_position,
                                     map:          map,
                                     animation:    google.maps.Animation.DROP,
@@ -102,16 +139,24 @@ $(document).ready(function() {
 
   function marker_clicked(marker) {
     if (infoWindow.currMarker === marker) {
-      infoWindow.currMarker = ""
       infoWindow.close(map, marker)
-      marker.is_open = false;
+      infoWindow.currMarker = ""
+      close_marker(marker)
     } else if (!marker.is_open) {
+      open_marker(marker)
+    } else {
+      close_marker(marker)
+    }
+  }
+
+  function close_marker(marker) {
+      marker.statusWindow.close(map, this)
+      marker.is_open = false;
+  }
+
+  function open_marker(marker) {
       marker.statusWindow.open(map, marker);
       marker.is_open = true;
-    } else {
-      marker.statusWindow.close(map, marker)
-      marker.is_open = false;
-    }
   }
 
   function kill_clients() {
@@ -121,9 +166,9 @@ $(document).ready(function() {
   }
 
   function change_bounds() {
-    var is_valid_zoom   = valid_zoom()
-    var bounds          = get_bounds();
-    if (is_past_refactory_period) {
+    if (is_past_refactory_period && map) {
+      var is_valid_zoom   = valid_zoom()
+      var bounds          = get_bounds();
       $.post("/homepage/change_bounds", {sw_lng:          bounds["sw_lng"], 
                                         sw_lat:           bounds["sw_lat"], 
                                         ne_lng:           bounds["ne_lng"], 
@@ -168,5 +213,6 @@ $(document).ready(function() {
     return e.keyCode == 13
   }
 
-  initialize();
+  initialize_map();
+  initialize_pubsub();
 });

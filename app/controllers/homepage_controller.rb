@@ -45,8 +45,7 @@ class HomepageController < ApplicationController
       if (tweet.valid?)
         puts "#{tweet.text}\n#{locations}"
         @@faye_client.publish('/faye/' +  currentSession,
-                              text:       tweet,
-                              language:   tweet.language)
+                              tweet:      tweet)
       end
     end
   end
