@@ -1,6 +1,14 @@
-<%= stylesheet_link_tag 'homepage' %>
-  <%= javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDGCihAwawm_tMs2GOoyqVV_JQXkj4ctYQ&libraries=visualization&sensor=true_or_false' %>
-<input type="text" id="search_address" class="search_address" value=""/>
+<%= stylesheet_link_tag 'homepage', 'http://code.jquery.com/ui/1.11.0/themes/flick/jquery-ui.css' %>
+  <%= javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDGCihAwawm_tMs2GOoyqVV_JQXkj4ctYQ&libraries=visualization&sensor=true_or_false', 'http://code.jquery.com/ui/1.11.0/jquery-ui.js' %>
+<input type="text" id="search_address" class="search_address" placeholder="Search location"/>
+<select name="marker_select" id="marker_select" class="marker_select">
+      <option select="selected" value="all">Show All</option>
+      <option value="none">Show None</option>
+</select>
+<div id="heat_tweet_buttons">
+  <input type="checkbox" name="heat_or_tweet" value="tweet" checked="checked" id="tweet"><label for="tweet">Show Tweets</label>
+  <input type="checkbox" name="heat_or_tweet" value="heat" id="heat"><label for="heat">Show Heatmap</label>
+</div>
 <div id="map_canvas" class="map_canvas"></div>
 <script>
   var currentSession = "<%= @currentSession %>"

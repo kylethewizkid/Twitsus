@@ -16,18 +16,29 @@ html, body {
   padding: 0 11px 0 13px;
   width: 200px;
   font-family: Roboto;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 300;
   text-overflow: ellipsis;
-  position: absolute;
-  top: 30px;
-  left: 100px;
   z-index: 1;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-transition: all 0.30s ease-in-out;
+  -moz-transition: all 0.30s ease-in-out;
+  outline: none;
+  padding: 3px 0px 3px 8px;
+  margin: 5px 1px 3px 0px;
+  border: 1px solid #DDDDDD;
 
   &:focus {
-    border-color: #4d90fe;
-    margin-left: -1px;
-    padding-left: 14px;  /* Regular padding-left + 1. */
+    box-shadow: 0 0 5px rgba(81, 203, 238, 1);
+    padding: 3px 0px 3px 8px;
+    margin: 5px 1px 3px 0px;
+    border: 1px solid rgba(81, 203, 238, 1);
     width: 201px;
   }
+}
+
+.marker_select {
+  width: 200px;
 }

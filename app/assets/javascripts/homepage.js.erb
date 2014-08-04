@@ -1,15 +1,18 @@
 $(document).ready(function() {
 
-  window.onbeforeunload = function() { kill_clients() };
-  var is_past_refactory_period = true
-  var map           = ""
-  var faye          = new Faye.Client('http://fayebulous.herokuapp.com/faye');
-  var infoWindow    = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
-  var addressField  = document.getElementById('search_address');
-  var geocoder      = new google.maps.Geocoder();
-  var heat_map_data = {}
-  var heatmaps      = {}
-  var all_markers   = {}
+  window.onbeforeunload         = function() { kill_clients() };
+  var is_past_refactory_period  = true
+  var map                       = ""
+  var faye                      = new Faye.Client('http://fayebulous.herokuapp.com/faye');
+  var infoWindow                = new google.maps.InfoWindow({maxWidth: 200, disableAutoPan: true});
+  var addressField              = document.getElementById('search_address');
+  var geocoder                  = new google.maps.Geocoder();
+  var heat_map_data             = {}
+  var heatmaps                  = {}
+  var all_markers               = {}
+  var all_languages             = []
+  var show_markers              = true
+  var currentMarkerLanguage     = ""
 
   function initialize_map() {
     var mapOptions  = { zoom: 9, mapTypeId:  google.maps.MapTypeId.HYBRID };
@@ -28,12 +31,82 @@ $(document).ready(function() {
   function initialize_pubsub() {
     faye.subscribe("/faye/" + currentSession, function(response) {
       console.log(response)
-      var tweet         = response.tweet
-      tweet.language    = tweet.language.name
-      var marker        = new_marker(tweet)
-      update_info_window(marker)
+      var tweet       = response.tweet
+      tweet.language  = tweet.language.name
+      var marker      = new_marker(tweet)
+      update_info_window(marker, tweet.language)
       google.maps.event.addListener(marker, 'click', function () { marker = marker_clicked(this) });
       update_heat_and_markers(tweet.language, tweet.lat, tweet.lng, marker)
+    });
+  }
+
+  function initialize_inputs() {
+    $( "#marker_select" ).selectmenu( {
+      change: function( event, data ) {
+        value = data.item.value
+        can_show_tweets = $('#tweet').prop('checked')
+        can_show_heat   = $('#heat').prop('checked')
+        switch(value) {
+          case "all":
+            show_markers = true;
+            currentMarkerLanguage = ""
+            if (can_show_tweets) toggle_all_markers(true);
+            if (can_show_heat) toggle_heat_map(true)
+            break;
+          case "none":
+            show_markers = false;
+            currentMarkerLanguage = ""
+            if (can_show_tweets) toggle_all_markers(false);
+            if (can_show_heat) toggle_heat_map(false)
+            break;
+          default:
+            show_markers = false
+            currentMarkerLanguage = value
+            if (can_show_tweets) toggle_all_markers(false, value)
+            if (can_show_heat) toggle_heat_map(false, value)
+        }
+      }
+    });
+    $( "#heat_tweet_buttons" ).buttonset();
+    $('#tweet').change(function () {
+      if ($('#tweet').prop('checked')) {
+        value = $( "#marker_select" ).val()
+        switch(value) {
+          case "all":
+            show_markers = true;
+            currentMarkerLanguage = ""
+            toggle_all_markers(true);
+            break;
+          case "none":
+            show_markers = false;
+            currentMarkerLanguage = ""
+            toggle_all_markers(false);
+            break;
+          default:
+            show_markers = false
+            currentMarkerLanguage = value
+            toggle_all_markers(false, value)
+        }
+      } else {
+        toggle_all_markers(false)
+      }
+    });
+    $('#heat').change(function() {
+      if ($('#heat').prop('checked')) {
+        value = $( "#marker_select" ).val()
+        switch(value) {
+          case "all":
+            toggle_heat_map(true)
+            break;
+          case "none":
+            toggle_heat_map(false)
+            break;
+          default:
+            toggle_heat_map(false, value)
+        }
+      } else {
+        toggle_heat_map(false)
+      }
     });
   }
 
@@ -50,28 +123,59 @@ $(document).ready(function() {
     for (var lang in all_markers) {
       if (lang != except_language) {
         for (i = 0; i < all_markers[lang].length; i++) {
-          all_markers[lang][i].setVisible(make_visible);
+          curr_marker = all_markers[lang][i]
+          curr_marker.setVisible(make_visible);
+          curr_marker.statusWindow.close()
         }
       } else {
-        all_markers[lang][i].setVisible(!make_visible);
+        for (i = 0; i < all_markers[lang].length; i++) {
+          all_markers[lang][i].setVisible(!make_visible);
+        }
       }
     }
+    infoWindow.close()
   }
 
   function set_new_language(lang) {
+    all_languages.push(lang)
+    all_languages.sort()
     heat_map_data[lang] = new google.maps.MVCArray([])
-    heatmaps[lang]      = new google.maps.visualization.HeatmapLayer({data: heat_map_data[lang]});
+    heatmaps[lang]      = new google.maps.visualization.HeatmapLayer({data: heat_map_data[lang], radius: 8});
     all_markers[lang]   = []
+    appendToSelectMenu()
+  }
+
+  function appendToSelectMenu() {
+    var currently_selected_val = $('#marker_select').val()
+    $('#marker_select').find('option').remove().end().append(new Option("All", "all"))
+    for (var i = 0; i < all_languages.length; i++) {
+      current_language = all_languages[i]
+      casedLanguage = toTitleCase(current_language)
+      $("#marker_select").append(new Option(casedLanguage, current_language));
+    }
+    $("#marker_select").append(new Option("None", "none"));
+    $('[value=' + currently_selected_val + ']').attr("selected", "selected")
+    $("#marker_select").selectmenu("refresh")
+  }
+
+  function toTitleCase(str) {
+    return str.replace(/\w\S*/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
   }
 
   function toggle_heat_map(make_visible, except_language) {
     for (var lang in heatmaps) {
       if (lang != except_language) {
-        set_map_to = make_visible ? map : null 
+        set_map_to = make_visible ? map : null
       } else {
         set_map_to = make_visible ? null : map
       }
-      heatmaps[lang].setMap(set_map_to)
+      console.log(set_map_to)
+      console.log(heatmaps[lang].getMap())
+      if (set_map_to != heatmaps[lang].getMap() || !set_map_to ) {
+        heatmaps[lang].setMap(set_map_to)
+      }
     }
   }
 
@@ -108,6 +212,7 @@ $(document).ready(function() {
     var marker_icon       = determine_flag(language)
     var new_position      = new google.maps.LatLng(tweet.lat, tweet.lng)
     var new_status_window = new google.maps.InfoWindow({ maxWidth: 200, disableAutoPan: true });
+    var marker_visibility = is_marker_visible(language)
     new_status_window.setContent(bubble_content)
     return new google.maps.Marker({ position:     new_position,
                                     map:          map,
@@ -115,13 +220,20 @@ $(document).ready(function() {
                                     title:        language,
                                     content:      bubble_content,
                                     icon:         marker_icon,
-                                    statusWindow: new_status_window});
+                                    statusWindow: new_status_window,
+                                    visible:   marker_visibility});
   }
 
-  function update_info_window(marker) {
-    infoWindow.currMarker = marker
-    infoWindow.setContent(marker.content)
-    infoWindow.open(map, marker);
+  function is_marker_visible(language) {
+    return !!($('#tweet').prop('checked') && (show_markers || language == currentMarkerLanguage))
+  }
+
+  function update_info_window(marker, language) {
+    if (is_marker_visible(language)) {
+      infoWindow.currMarker = marker
+      infoWindow.setContent(marker.content)
+      infoWindow.open(map, marker);
+    }
   }
 
   function determine_flag(language) {
@@ -191,22 +303,26 @@ $(document).ready(function() {
   }
 
   function search() {
-    bounds = get_bounds();
-    sw_coords = new google.maps.LatLng(bounds["sw_lat"], bounds["sw_lng"])
-    ne_coords = new google.maps.LatLng(bounds["ne_lat"], bounds["ne_lng"])
-    lat_lng_bounds = new google.maps.LatLngBounds(sw_coords, ne_coords)
+    bounds          = get_bounds();
+    sw_coords       = new google.maps.LatLng(bounds["sw_lat"], bounds["sw_lng"])
+    ne_coords       = new google.maps.LatLng(bounds["ne_lat"], bounds["ne_lng"])
+    lat_lng_bounds  = new google.maps.LatLngBounds(sw_coords, ne_coords)
     geocoder.geocode({'address': addressField.value, 'bounds': lat_lng_bounds}, 
                       function(results, status) { redirect_post_search(results, status) });
   }
 
   function redirect_post_search(results, status) {
-    if (status == google.maps.GeocoderStatus.OK) { 
-      var loc = results[0].geometry.location;
+    if (is_location_found(status)) { 
+      var loc     = results[0].geometry.location;
       var new_loc = new google.maps.LatLng(loc.lat(), loc.lng())
       map.setCenter(new_loc);
     } else {
       alert("Not found: " + status); 
     } 
+  }
+
+  function is_location_found(status) {
+    return status == google.maps.GeocoderStatus.OK
   }
 
   function submit_button_pressed(e) {
@@ -215,4 +331,5 @@ $(document).ready(function() {
 
   initialize_map();
   initialize_pubsub();
+  initialize_inputs();
 });
