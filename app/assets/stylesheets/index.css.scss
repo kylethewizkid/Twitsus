@@ -27,7 +27,7 @@ h2 {
 .search_address {
   background-color: #fff;
   padding: 0 11px 0 13px;
-  width: 400px;
+  width: calc(100% - 25px);
   height: 24px;
   font-size: 24px;
   text-overflow: ellipsis;
