@@ -1,13 +1,33 @@
-<%= stylesheet_link_tag 'homepage', 'http://code.jquery.com/ui/1.11.0/themes/flick/jquery-ui.css' %>
+<%= stylesheet_link_tag 'homepage', 'http://code.jquery.com/ui/1.11.0/themes/dark-hive/jquery-ui.css' %>
   <%= javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDGCihAwawm_tMs2GOoyqVV_JQXkj4ctYQ&libraries=visualization&sensor=true_or_false', 'http://code.jquery.com/ui/1.11.0/jquery-ui.js' %>
-<input type="text" id="search_address" class="search_address" placeholder="Search location"/>
-<select name="marker_select" id="marker_select" class="marker_select">
-      <option select="selected" value="all">Show All</option>
-      <option value="none">Show None</option>
-</select>
-<div id="heat_tweet_buttons">
-  <input type="checkbox" name="heat_or_tweet" value="tweet" checked="checked" id="tweet"><label for="tweet">Show Tweets</label>
-  <input type="checkbox" name="heat_or_tweet" value="heat" id="heat"><label for="heat">Show Heatmap</label>
+<div class="header">
+  <div class="video_container">
+    <video autoplay loop class="hero_video">
+      <source src="<%= asset_path('header_video.mp4') %>" type="video/mp4">
+      <source src="<%= asset_path('header_video.ogg') %>" type="video/ogg">
+      <source src="<%= asset_path('header_video.webm') %>" type="video/webm">
+    </video>
+    <div class="hero_text">
+        <h1>Twitsus.</h1>
+        <h2>Generate a census using live Twitter data</h2>
+        <input type="text" id="search_address" class="search_address" placeholder="Search location"/>
+        <div class="hero_submit" id="hero_submit">
+          Generate Census
+        </div>
+    </div>
+    <div class="hero_form_container" id="hero_form_container">
+      <div class="hero_form">
+        <select name="marker_select" id="marker_select" class="marker_select">
+              <option select="selected" value="all">All</option>
+              <option value="none">None</option>
+        </select>
+        <div id="heat_tweet_buttons" class="heat_tweet_buttons">
+          <input type="checkbox" value="tweet" checked="checked" id="tweet"><label for="tweet">Show Tweets</label>
+          <input type="checkbox" value="heat" id="heat"><label for="heat">Show Heatmap</label>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div id="map_canvas" class="map_canvas"></div>
 <script>

@@ -15,7 +15,7 @@ $(document).ready(function() {
   var currentMarkerLanguage     = ""
 
   function initialize_map() {
-    var mapOptions  = { zoom: 9, mapTypeId:  google.maps.MapTypeId.HYBRID };
+    var mapOptions  = { zoom: 9, mapTypeId:  google.maps.MapTypeId.HYBRID, scrollwheel: false };
     map             = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
     google.maps.event.addListener(map,"idle",function() { change_bounds() });
     set_center();
@@ -23,8 +23,18 @@ $(document).ready(function() {
   }
 
   function initialize_search_bar() {
+    document.getElementById("hero_submit").addEventListener("click", function(e) {
+      $('html,body').animate({
+        scrollTop: $('#hero_form_container').offset().top
+      }, 1000);      search();
+    }, false);
     document.getElementById("search_address").addEventListener("keydown", function(e) {
-      if (submit_button_pressed(e)) { search(); }
+      if (submit_button_pressed(e)) { 
+        $('html,body').animate({
+          scrollTop: $('#hero_form_container').offset().top
+        }, 1000);
+        search(); 
+      }
     }, false);
   }
 
