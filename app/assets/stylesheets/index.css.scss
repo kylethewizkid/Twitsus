@@ -48,7 +48,7 @@ h2 {
     padding: 3px 0px 3px 8px;
     margin: 5px auto 15px auto;
     border: 1px solid rgba(81, 203, 238, 1);
-    width: 401px;
+    width: calc(100% - 26px);;
   }
 }
 
@@ -95,7 +95,9 @@ h2 {
 
 .hero_form {
   margin: 15px auto 0 auto;
-  width: 740px;
+  width: 100%;
+  min-width: 600px;
+  max-width: 740px;
 }
 
 .heat_tweet_buttons {
